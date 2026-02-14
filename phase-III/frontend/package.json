@@ -1,0 +1,39 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest --watch src/api/__tests__/chat-api.test.ts"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "axios": "^1.13.4",
+    "better-auth": "^0.0.1-beta.13",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.54.2",
+    "swr": "^2.3.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@jest/types": "^30.2.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/axios": "^0.14.4",
+    "@types/node": "^20",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "jest": "^29.7.0",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5"
+  }
+}
