@@ -1,25 +1,21 @@
-import { jest } from '@jest/globals';
-import { apiClient } from "./api-client";
-import { log_operation } from "./lib/logging";
-
-// Mock global fetch for tests
+ // Mock global fetch for tests
 global.fetch = jest.fn();
 
-// Mock apiClient methods
-jest.mock('./api-client', () => ({
-  apiClient: {
-    post: jest.fn(),
-    get: jest.fn(),
-    delete: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-  },
-}));
+// Mock apiClient methods - disabled as tests mock directly
+//jest.mock("./api-client", () => ({
+//  apiClient: {
+//    post: jest.fn(),
+//    get: jest.fn(),
+//    delete: jest.fn(),
+//    put: jest.fn(),
+//    patch: jest.fn(),
+//  },
+//}));
 
 // Mock logging
-jest.mock('./lib/logging', () => ({
-  log_operation: jest.fn(),
-}));
+//jest.mock("./lib/logging", () => ({
+//  log_operation: jest.fn(),
+//}));
 
 // Mock localStorage for browser environment
 const localStorageMock = {
@@ -29,14 +25,14 @@ const localStorageMock = {
   clear: jest.fn(),
 };
 
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
 });
 
 // Mock window object
 global.window = Object.assign({
   location: {
-    href: '',
+    href: "",
   },
 }, global.window || {});
 

@@ -141,7 +141,7 @@ frontend/
 
 ### Backend
 ```env
-DATABASE_URL=postgresql+asyncpg://neondb_owner:npg_OobETvcr52mH@ep-purple-rain-ahogvd6j-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=your-database-url-neon
 SECRET_KEY=your-secret-key-here
 BETTER_AUTH_SECRET=your-better-auth-secret-key
 BETTER_AUTH_PUBLIC_KEY=your-public-key-for-verification

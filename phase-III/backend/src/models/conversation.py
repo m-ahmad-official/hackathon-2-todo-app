@@ -17,6 +17,7 @@ class Conversation(SQLModel, table=True):
 # Pydantic models for API responses
 class ConversationCreate(SQLModel):
     title: Optional[str] = None
+    user_id: Optional[str] = None
 
 class ConversationResponse(SQLModel):
     id: int

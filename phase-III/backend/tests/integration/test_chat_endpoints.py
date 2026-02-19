@@ -43,7 +43,7 @@ class TestChatEndpoints:
         """Test listing conversations"""
         # Create multiple conversations
         for i in range(3):
-            await auth_client.post("/api/v1/chat/", json={"title": f"Conversation {i}".})
+            await auth_client.post("/api/v1/chat/", json={"title": f"Conversation {i}"})
 
         # Test listing with default parameters
         response = await auth_client.get("/api/v1/chat/")
@@ -159,11 +159,11 @@ class TestChatEndpoints:
         conversation = response.json()
 
         # Second user should not be able to access first user's conversation
-        response = await auth_client_2.get(f"/api/v1/chat/{conversation[\"id\"]}")
+        response = await auth_client_2.get(f"/api/v1/chat/{conversation['id']}")
         assert response.status_code == 404
 
         # Second user should not be able to delete first user's conversation
-        response = await auth_client_2.delete(f"/api/v1/chat/{conversation[\"id\"]}")
+        response = await auth_client_2.delete(f"/api/v1/chat/{conversation['id']}")
         assert response.status_code == 404
 
     async def test_message_limits(self, auth_client, setup_conversation):

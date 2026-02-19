@@ -592,7 +592,7 @@ async def send_chat_message(
             conversation_id=chat_request.conversation_id
         )
 
-        log_operation("CHAT_MESSAGE_PROCESSED", user_id=current_user_id, conversation_id=result["conversation_id"])
+        log_operation("CHAT_MESSAGE_PROCESSED", user_id=current_user_id, conversation_id=result["conversationId"])
         return ChatResponse(**result)
 
     except ValueError as e:

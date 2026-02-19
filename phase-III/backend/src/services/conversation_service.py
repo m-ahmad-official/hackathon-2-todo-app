@@ -53,6 +53,14 @@ class ConversationService:
         """
         conversation = ConversationService.get_conversation(session, conversation_id, user_id)
         if conversation:
+            # First delete all messages in the conversation
+            messages = session.exec(
+                select(Message).where(Message.conversation_id == conversation_id)
+            ).all()
+            for message in messages:
+                session.delete(message)
+
+            # Then delete the conversation
             session.delete(conversation)
             session.commit()
             return True

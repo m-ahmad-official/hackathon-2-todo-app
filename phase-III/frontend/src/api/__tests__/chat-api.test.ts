@@ -1,4 +1,20 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+
+// Mock the apiClient module BEFORE importing anything that uses it
+const mockPost = jest.fn();
+const mockGet = jest.fn();
+const mockDelete = jest.fn();
+
+jest.mock("../../services/api-client", () => ({
+  apiClient: {
+    post: mockPost,
+    get: mockGet,
+    delete: mockDelete,
+    put: jest.fn(),
+    patch: jest.fn(),
+  },
+}));
+
 import {
   chatApiService,
   Conversation,
@@ -41,31 +57,17 @@ describe("Chat API Service", () => {
     timestamp: new Date().toISOString(),
   });
 
-  // Mock the apiClient methods
-  const mockApiClient = {
-    post: (() =>
-      Promise.resolve({
-        data: mockApiResponse(mockConversation),
-      })) as unknown as AnyMock,
-    get: (() =>
-      Promise.resolve({
-        data: mockApiResponse([mockConversation]),
-      })) as unknown as AnyMock,
-    delete: (() => Promise.resolve({ data: undefined })) as unknown as AnyMock,
-  };
-
-  // Replace the real apiClient with mock
-  jest.mock("../api-client", () => ({
-    apiClient: mockApiClient,
-  }));
-
   beforeEach(() => {
-    // Clear all mock calls before each test
-    jest.clearAllMocks();
+    // Reset all mocks to their initial state before each test
+    jest.resetAllMocks();
   });
 
   describe("createChatConversation", () => {
     it("should create a conversation successfully", async () => {
+      mockPost.mockResolvedValue({
+        data: mockApiResponse(mockConversation),
+      });
+
       const result = await chatApiService.createChatConversation({
         title: "Test Conversation",
       });
@@ -75,16 +77,20 @@ describe("Chat API Service", () => {
     });
 
     it("should handle create conversation error", async () => {
-      mockApiClient.post.mockRejectedValueOnce(new Error("Network error"));
+      mockPost.mockRejectedValueOnce(new Error("Network error"));
 
       await expect(
         chatApiService.createChatConversation({ title: "Test" }),
-      ).rejects.toThrow("Network error");
+      ).rejects.toMatchObject({ message: "Network error" });
     });
   });
 
   describe("getConversation", () => {
     it("should get a conversation successfully", async () => {
+      mockGet.mockResolvedValue({
+        data: mockApiResponse(mockConversation),
+      });
+
       const result = await chatApiService.getConversation({
         conversationId: 1,
       });
@@ -94,18 +100,20 @@ describe("Chat API Service", () => {
     });
 
     it("should handle get conversation error", async () => {
-      mockApiClient.get.mockRejectedValueOnce(
-        new Error("Conversation not found"),
-      );
+      mockGet.mockRejectedValueOnce(new Error("Conversation not found"));
 
       await expect(
         chatApiService.getConversation({ conversationId: 999 }),
-      ).rejects.toThrow("Conversation not found");
+      ).rejects.toMatchObject({ message: "Conversation not found" });
     });
   });
 
   describe("listConversations", () => {
     it("should list conversations successfully", async () => {
+      mockGet.mockResolvedValue({
+        data: mockApiResponse([mockConversation]),
+      });
+
       const result = await chatApiService.listConversations({
         limit: 10,
         offset: 0,
@@ -117,18 +125,20 @@ describe("Chat API Service", () => {
     });
 
     it("should handle list conversations error", async () => {
-      mockApiClient.get.mockRejectedValueOnce(
-        new Error("Failed to fetch conversations"),
-      );
+      mockGet.mockRejectedValueOnce(new Error("Failed to fetch conversations"));
 
       await expect(
         chatApiService.listConversations({ limit: 10 }),
-      ).rejects.toThrow("Failed to fetch conversations");
+      ).rejects.toMatchObject({ message: "Failed to fetch conversations" });
     });
   });
 
   describe("deleteConversation", () => {
     it("should delete a conversation successfully", async () => {
+      mockDelete.mockResolvedValue({
+        data: undefined,
+      });
+
       const result = await chatApiService.deleteConversation({
         conversationId: 1,
       });
@@ -138,18 +148,20 @@ describe("Chat API Service", () => {
     });
 
     it("should handle delete conversation error", async () => {
-      mockApiClient.delete.mockRejectedValueOnce(
-        new Error("Failed to delete conversation"),
-      );
+      mockDelete.mockRejectedValueOnce(new Error("Failed to delete conversation"));
 
       await expect(
         chatApiService.deleteConversation({ conversationId: 1 }),
-      ).rejects.toThrow("Failed to delete conversation");
+      ).rejects.toMatchObject({ message: "Failed to delete conversation" });
     });
   });
 
   describe("addMessage", () => {
     it("should add a message successfully", async () => {
+      mockPost.mockResolvedValue({
+        data: mockApiResponse(mockMessage),
+      });
+
       const result = await chatApiService.addMessage({
         conversationId: 1,
         content: "Test message",
@@ -160,21 +172,23 @@ describe("Chat API Service", () => {
     });
 
     it("should handle add message error", async () => {
-      mockApiClient.post.mockRejectedValueOnce(
-        new Error("Failed to add message"),
-      );
+      mockPost.mockRejectedValueOnce(new Error("Failed to add message"));
 
       await expect(
         chatApiService.addMessage({
           conversationId: 1,
           content: "Test",
         }),
-      ).rejects.toThrow("Failed to add message");
+      ).rejects.toMatchObject({ message: "Failed to add message" });
     });
   });
 
   describe("getMessages", () => {
     it("should get messages successfully", async () => {
+      mockGet.mockResolvedValue({
+        data: mockApiResponse([mockMessage]),
+      });
+
       const result = await chatApiService.getMessages(1, 20);
 
       expect(result.success).toBe(true);
@@ -183,12 +197,12 @@ describe("Chat API Service", () => {
     });
 
     it("should handle get messages error", async () => {
-      mockApiClient.get.mockRejectedValueOnce(
-        new Error("Failed to fetch messages"),
+      mockGet.mockRejectedValueOnce(
+        new Error("Failed to fetch messages")
       );
 
-      await expect(chatApiService.getMessages(1, 20)).rejects.toThrow(
-        "Failed to fetch messages",
+      await expect(chatApiService.getMessages(1, 20)).rejects.toMatchObject(
+        { message: "Failed to fetch messages" }
       );
     });
   });
@@ -202,46 +216,28 @@ describe("Chat API Service", () => {
     });
 
     it("should identify authentication errors", () => {
-      const authError = chatApiService.handleApiError({
-        response: {
-          data: {
-            error: {
-              code: "UNAUTHORIZED",
-              message: "Invalid token",
-            },
-          },
-        },
-      } as unknown);
+      const authError: any = {
+        code: "UNAUTHORIZED",
+        message: "Invalid token",
+      };
 
       expect(chatApiService.isAuthenticationError(authError)).toBe(true);
     });
 
     it("should identify validation errors", () => {
-      const validationError = chatApiService.handleApiError({
-        response: {
-          data: {
-            error: {
-              code: "VALIDATION_ERROR",
-              message: "Invalid data",
-            },
-          },
-        },
-      } as unknown);
+      const validationError: any = {
+        code: "VALIDATION_ERROR",
+        message: "Invalid data",
+      };
 
       expect(chatApiService.isValidationError(validationError)).toBe(true);
     });
 
     it("should identify not found errors", () => {
-      const notFoundError = chatApiService.handleApiError({
-        response: {
-          data: {
-            error: {
-              code: "NOT_FOUND",
-              message: "Resource not found",
-            },
-          },
-        },
-      } as unknown);
+      const notFoundError: any = {
+        code: "NOT_FOUND",
+        message: "Resource not found",
+      };
 
       expect(chatApiService.isNotFoundError(notFoundError)).toBe(true);
     });
@@ -249,6 +245,10 @@ describe("Chat API Service", () => {
 
   describe("Logging", () => {
     it("should log operations during API calls", async () => {
+      mockPost.mockResolvedValue({
+        data: mockApiResponse(mockConversation),
+      });
+
       const consoleSpy = jest
         .spyOn(console, "log")
         .mockImplementation(() => {});

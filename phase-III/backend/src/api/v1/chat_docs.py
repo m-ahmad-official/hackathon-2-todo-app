@@ -61,12 +61,15 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     """Schema for chat responses."""
-    conversation_id: int = Field(..., description="Conversation ID")
+    conversation_id: int = Field(..., alias="conversationId", description="Conversation ID")
     message: str = Field(..., description="AI response message")
     context_metadata: Dict[str, Any] = Field(
         default_factory=dict,
         description="Metadata about actions taken (tasks modified, tools called, etc.)"
     )
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 # Documentation constants

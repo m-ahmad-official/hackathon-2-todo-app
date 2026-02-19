@@ -57,7 +57,10 @@
       "Bash(export PYTHONPATH=/mnt/e/7. Low Code Agentic AI/Hackathon II/phase-III:$PYTHONPATH:*)",
       "Bash(export:*)",
       "Bash(uvicorn:*)",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzcxMTg1MTIwLCJpYXQiOjE3NzA1ODAzMjAsIm5iZiI6MTc3MDU4MDMyMH0.5xL_d8L9f_L-E2661t1ZA3fQp2SPxSpOoJ1OIwWy4ek\")"
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzcxMTg1MTIwLCJpYXQiOjE3NzA1ODAzMjAsIm5iZiI6MTc3MDU4MDMyMH0.5xL_d8L9f_L-E2661t1ZA3fQp2SPxSpOoJ1OIwWy4ek\")",
+      "Bash(npx jest:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)"
     ]
   }
 }

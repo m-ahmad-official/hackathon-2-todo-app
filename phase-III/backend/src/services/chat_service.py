@@ -95,6 +95,10 @@ class ChatService:
                 )
                 log_operation("TOOL_CALLS_EXECUTED", user_id=user_id, conversation_id=conversation_id, count=len(tool_results))
 
+                # Enhance AI response with tool results for better user experience
+                enhanced_response = self._enhance_response_with_tool_results(ai_response, tool_calls, tool_results)
+                ai_response = enhanced_response
+
             # Save AI response
             ConversationService.add_message(
                 session, conversation_id, ai_response, "ai"
@@ -103,7 +107,7 @@ class ChatService:
 
             # Build response
             response = {
-                "conversation_id": conversation_id,
+                "conversationId": conversation_id,
                 "message": ai_response,
                 "context_metadata": {
                     "tasks_modified": len([r for r in tool_results if r.get("success")]),
@@ -120,3 +124,72 @@ class ChatService:
         except Exception as e:
             log_operation("CHAT_SERVICE_ERROR", user_id=user_id, conversation_id=conversation_id, error=str(e))
             raise
+
+    def _enhance_response_with_tool_results(self, original_response: str, tool_calls: List[Dict], tool_results: List[Dict]) -> str:
+        """
+        Enhance AI response by incorporating actual tool execution results
+
+        Args:
+            original_response: Original AI response text
+            tool_calls: List of tool calls that were executed
+            tool_results: Results from tool execution
+
+        Returns:
+            Enhanced response string with tool results incorporated
+        """
+        enhanced = original_response
+
+        # Check if any tools were actually successful
+        successful_tools = [r for r in tool_results if r.get("success")]
+
+        if not successful_tools:
+            return enhanced
+
+        # Build a detailed response based on tool calls
+        response_parts = []
+
+        for result in successful_tools:
+            tool_name = result.get("tool")
+            result_data = result.get("result")
+
+            if tool_name == "list_tasks":
+                tasks = result_data if isinstance(result_data, list) else []
+                if tasks:
+                    response_parts.append("Here are your tasks:")
+                    for task in tasks:
+                        status = "✓" if task.get("completed") else "○"
+                        title = task.get("title", "Untitled")
+                        response_parts.append(f"  {status} Task {task.get('id')}: {title}")
+                else:
+                    response_parts.append("You don't have any tasks yet. You can add one by saying 'create a task [name]'.")
+
+            elif tool_name == "add_task":
+                task = result_data
+                if task:
+                    response_parts.append(f"I've created a new task: '{task.get('title')}' (ID: {task.get('id')}).")
+
+            elif tool_name == "complete_task":
+                task_id = result.get("arguments", {}).get("task_id")
+                if result.get("success"):
+                    response_parts.append(f"I've marked task {task_id} as complete.")
+                else:
+                    response_parts.append(f"I couldn't find task {task_id} to mark as complete.")
+
+            elif tool_name == "delete_task":
+                task_id = result.get("arguments", {}).get("task_id")
+                if result.get("success"):
+                    response_parts.append(f"I've deleted task {task_id}.")
+                else:
+                    response_parts.append(f"I couldn't find task {task_id} to delete.")
+
+            elif tool_name == "update_task":
+                task = result_data
+                if task:
+                    response_parts.append(f"I've updated task {task.get('id')}: '{task.get('title')}'.")
+                else:
+                    response_parts.append("I couldn't update that task.")
+
+        if response_parts:
+            return "\n".join(response_parts)
+
+        return enhanced
