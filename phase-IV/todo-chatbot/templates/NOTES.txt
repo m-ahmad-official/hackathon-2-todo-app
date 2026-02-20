@@ -1,0 +1,51 @@
+1. Get the application URL by running these commands:
+
+{{- if and .Values.backend.enabled .Values.frontend.enabled }}
+{{- if contains "ClusterIP" .Values.frontend.service.type }}
+  # Frontend service is ClusterIP. Port-forward to access:
+  kubectl port-forward svc/{{ include "todo-chatbot.frontend.fullname" . }} 3000:{{ .Values.frontend.service.port }} &
+  echo "Frontend available at http://localhost:3000"
+
+  # Backend service is ClusterIP. Port-forward to access:
+  kubectl port-forward svc/{{ include "todo-chatbot.backend.fullname" . }} 8000:{{ .Values.backend.service.port }} &
+  echo "Backend API available at http://localhost:8000"
+{{- else if contains "NodePort" .Values.frontend.service.type }}
+  export FRONTEND_NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "todo-chatbot.frontend.fullname" . }})
+  export FRONTEND_NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Frontend available at http://$FRONTEND_NODE_IP:$FRONTEND_NODE_PORT"
+
+  export BACKEND_NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "todo-chatbot.backend.fullname" . }})
+  export BACKEND_NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Backend API available at http://$BACKEND_NODE_IP:$BACKEND_NODE_PORT"
+{{- else if contains "LoadBalancer" .Values.frontend.service.type }}
+  # Frontend
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        You can watch its status by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "todo-chatbot.frontend.fullname" . }}'
+  export FRONTEND_SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "todo-chatbot.frontend.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "Frontend available at http://$FRONTEND_SERVICE_IP:{{ .Values.frontend.service.port }}"
+
+  # Backend
+  export BACKEND_SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "todo-chatbot.backend.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "Backend API available at http://$BACKEND_SERVICE_IP:{{ .Values.backend.service.port }}"
+{{- end }}
+
+2. Check status of all resources:
+   kubectl get all,pods,svc,deployments -l app.kubernetes.io/instance={{ .Release.Name }}
+
+3. View logs:
+   kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }} -c {{ .Chart.Name }}-backend --tail=100
+   kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }} -c {{ .Chart.Name }}-frontend --tail=100
+
+4. Delete the release:
+   helm uninstall {{ .Release.Name }}
+
+{{- else if .Values.backend.enabled }}
+# Backend only deployment
+  kubectl port-forward svc/{{ include "todo-chatbot.backend.fullname" . }} 8000:{{ .Values.backend.service.port }} &
+  echo "Backend API available at http://localhost:8000"
+
+{{- else if .Values.frontend.enabled }}
+# Frontend only deployment
+  kubectl port-forward svc/{{ include "todo-chatbot.frontend.fullname" . }} 3000:{{ .Values.frontend.service.port }} &
+  echo "Frontend available at http://localhost:3000"
+{{- end }}

@@ -1,0 +1,96 @@
+# Local deployment values for Minikube
+# Uses locally built Docker images
+
+replicaCount: 1
+
+# Pull policy for local images - use IfNotPresent to avoid pulling from registry
+imagePullPolicy: IfNotPresent
+
+# Backend configuration
+backend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ai-chat-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    name: backend
+    port: 8000
+    type: ClusterIP
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 500m
+      memory: 256Mi
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ai-chat-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    name: frontend
+    port: 3000
+    type: ClusterIP
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 200m
+      memory: 128Mi
+  env:
+    - name: NEXT_PUBLIC_API_URL
+      value: "http://backend:8000"
+
+# Secrets - set from environment or external file
+# When deploying, use:
+#   helm install my-todo-chatbot ./todo-chatbot --values values-local.yaml --set-file backend.secrets.DATABASE_URL=./.env --set-file backend.secrets.OPENAI_API_KEY=./openai-key.txt
+# Or create a separate secrets-local.yaml file
+backend:
+  secrets: {}
+
+# Service account
+serviceAccount:
+  create: true
+  automount: true
+  name: ""
+
+# Pod annotations and labels
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+# Ingress disabled for local deployment (use port-forward)
+ingress:
+  enabled: false
+
+# NodeSelector, tolerations, affinity (customize as needed)
+nodeSelector: {}
+tolerations: []
+affinity: {}
